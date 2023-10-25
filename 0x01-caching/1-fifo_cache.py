@@ -1,34 +1,52 @@
-from base_caching import BaseCaching
+#!/usr/bin/python3
+"""FIFO Cache Replacement Implementation Class
+"""
+from threading import RLock
+
+BaseCaching = __import__('base_caching').BaseCaching
 
 
 class FIFOCache(BaseCaching):
-    """ FIFOCache class
+    """
+    An implementation of FIFO(First In Fisrt Out) Cache
+
+    Attributes:
+        __keys (list): Stores cache keys in order of entry using `.append`
+        __rlock (RLock): Lock accessed resources to prevent race condition
     """
 
     def __init__(self):
-        """ Constructor
+        """ Instantiation method, sets instance attributes
         """
         super().__init__()
-        self.keys = []
+        self.__keys = []
+        self.__rlock = RLock()
 
     def put(self, key, item):
         """ Add an item in the cache
         """
-        if key is None or item is None:
-            pass
-        else:
-            self.cache_data[key] = item
-            self.keys.append(key)
-        if len(self.cache_data) > BaseCaching.MAX_ITEMS:
-            first = self.keys.pop(0)
-            del self.cache_data[first]
-            print("DISCARD: {}".format(first))
+        if key is not None and item is not None:
+            keyOut = self._balance(key)
+            with self.__rlock:
+                self.cache_data.update({key: item})
+            if keyOut is not None:
+                print('DISCARD: {}'.format(keyOut))
 
     def get(self, key):
         """ Get an item by key
         """
-        if key is None or key not in self.cache_data:
-            return None
+        with self.__rlock:
+            return self.cache_data.get(key, None)
 
-        else:
-            return self.cache_data[key]
+    def _balance(self, keyIn):
+        """ Removes the oldest item from the cache at MAX size
+        """
+        keyOut = None
+        with self.__rlock:
+            if keyIn not in self.__keys:
+                keysLength = len(self.__keys)
+                if len(self.cache_data) == BaseCaching.MAX_ITEMS:
+                    keyOut = self.__keys.pop(0)
+                    self.cache_data.pop(keyOut)
+                self.__keys.insert(keysLength, keyIn)
+        return keyOut
