@@ -1,25 +1,57 @@
 #!/usr/bin/env python3
 """
-create flask server
+A Basic flask application
 """
-from flask import Flask, render_template, request, g
-from flask_babel import Babel, gettext
+from typing import (
+    Dict, Union
+)
+
+from flask import Flask
+from flask import g, request
+from flask import render_template
+from flask_babel import Babel
 
 
-class Config:
-    LANGUAGES = ["en", "fr"]
+class Config(object):
+    """
+    Application configuration class
+    """
+    LANGUAGES = ['en', 'fr']
     BABEL_DEFAULT_LOCALE = 'en'
     BABEL_DEFAULT_TIMEZONE = 'UTC'
 
 
+# Instantiate the application object
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Wrap the application with Babel
 babel = Babel(app)
 
 
-def get_locale():
+users = {
+    1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
+    2: {"name": "Beyonce", "locale": "en", "timezone": "US/Central"},
+    3: {"name": "Spock", "locale": "kg", "timezone": "Vulcan"},
+    4: {"name": "Teletubby", "locale": None, "timezone": "Europe/London"},
+}
+
+
+def get_user(id) -> Union[Dict[str, Union[str, None]], None]:
     """
-    Determine the best match with our supported languages.
+    Validate user login details
+    Args:
+        id (str): user id
+    Returns:
+        (Dict): user dictionary if id is valid else None
+    """
+    return users.get(int(id), {})
+
+
+@babel.localeselector
+def get_locale() -> str:
+    """
+    Gets locale from request object
     """
     options = [
         request.args.get('locale', '').strip(),
@@ -32,38 +64,21 @@ def get_locale():
             return locale
 
 
-babel.init_app(app, locale_selector=get_locale)
-
-users = {
-    1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
-    2: {"name": "Beyonce", "locale": "en", "timezone": "US/Central"},
-    3: {"name": "Spock", "locale": "kg", "timezone": "Vulcan"},
-    4: {"name": "Teletubby", "locale": None, "timezone": "Europe/London"},
-}
-
-
-def get_user(id):
-    """
-    Validate user login details
-    """
-    return users.get(int(id), 0)
-
-
 @app.before_request
-def before_request():
+def before_request() -> None:
     """
     Adds valid user to the global session object `g`
     """
     setattr(g, 'user', get_user(request.args.get('login_as', 0)))
 
 
-@app.route("/")
-def index():
+@app.route('/', strict_slashes=False)
+def index() -> str:
     """
-    Render html template
+    Renders a basic html template
     """
-    return render_template("6-index.html")
+    return render_template('6-index.html')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run()

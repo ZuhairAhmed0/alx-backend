@@ -1,39 +1,45 @@
 #!/usr/bin/env python3
 """
-create flask server
+A Basic flask application
 """
-from flask import Flask, render_template, request
-from flask_babel import Babel, gettext
+from flask import Flask
+from flask import request
+from flask import render_template
+from flask_babel import Babel
 
 
-class Config:
-    LANGUAGES = ["en", "fr"]
+class Config(object):
+    """
+    Application configuration class
+    """
+    LANGUAGES = ['en', 'fr']
     BABEL_DEFAULT_LOCALE = 'en'
     BABEL_DEFAULT_TIMEZONE = 'UTC'
 
 
+# Instantiate the application object
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Wrap the application with Babel
 babel = Babel(app)
 
 
-def get_locale():
+@babel.localeselector
+def get_locale() -> str:
     """
-    Determine the best match with our supported languages.
+    Gets locale from request object
     """
-    return request.accept_languages.best_match(app.config["LANGUAGES"])
+    return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
-babel.init_app(app, locale_selector=get_locale)
-
-
-@app.route("/")
-def index():
+@app.route('/', strict_slashes=False)
+def index() -> str:
     """
-    Print Hello world
+    Renders a basic html template
     """
-    return render_template("2-index.html")
+    return render_template('2-index.html')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run()
