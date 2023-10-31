@@ -25,8 +25,7 @@ class Server:
     @staticmethod
     def index_range(page: int, page_size: int) -> Tuple[int, int]:
         """
-        function named index_range that takes two integer
-        arguments page and page_size
+        function named index_range that takes two integerarguments page and page_size
         """
         nextPageStartIndex = page * page_size
         return nextPageStartIndex - page_size, nextPageStartIndex
